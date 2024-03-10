@@ -2,18 +2,21 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import Modal from "../components/Modal";
 import Reloj from "../components/Reloj";
+import people from "../assets/img/people.webp"
 import { Html5QrcodeScanner } from "html5-qrcode";
 
 export default function Inicio() {
   const [scanResult, setScanResult] = useState(null);
-  const scannerRef = useRef(null);
   const [studentInfo, setStudentInfo] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [showInfo, setShowInfo] = useState(false);
+  const [dniInput, setDniInput] = useState("");
+
+  const scannerRef = useRef(null);
 
   useEffect(() => {
-    scannerRef.current = new Html5QrcodeScanner("reader", {      
+    scannerRef.current = new Html5QrcodeScanner("reader", {
       fps: 5,
       aspectRatio: 1,
       disableFlip: true,
@@ -44,7 +47,6 @@ export default function Inicio() {
         setModalOpen(true);
       } else {
         setStudentInfo(response.data.studentInfo);
-        console.log(setStudentInfo)
         setShowInfo(true);
         setTimeout(() => {
           setShowInfo(false);
@@ -55,12 +57,25 @@ export default function Inicio() {
     }
   };
 
+  const handleInputChange = (e) => {
+    setDniInput(e.target.value);
+  };
+
+  const handleManualAttendance = async (e) => {
+    e.preventDefault();
+    if (dniInput.trim() === "") {
+      setModalMessage("Por favor, ingrese un DNI válido");
+      setModalOpen(true);
+      return;
+    }
+
+    sendAttendanceData(dniInput);
+  };
+
   const closeModal = () => {
     setModalOpen(false);
     setModalMessage("");
   };
-
-  // abrir modal
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -80,9 +95,10 @@ export default function Inicio() {
     setModalMessage("Modal abierto con atajo de teclado Ctrl + ñ");
   };
 
+
   return (
     <>
-      <main className="max-w-7xl m-auto flex items-start justify-center h-screen overflow-hidden">
+      <main className="max-w-7xl m-auto flex items-start justify-center h-screen">
         <div className="flex  flex-col justify-between items-center gap-4">
 
           <section className="w-full">
@@ -94,29 +110,33 @@ export default function Inicio() {
           </section>
 
           <section className="w-full">
-            <div className="flex items-center justify-center text-center text-3xl font-bold ">                      
+            <div className="flex items-center justify-center text-center text-3xl font-bold ">
             </div>
             {showInfo ? (
               <div className="flex items-center justify-center gap-6">
                 <div>
-                  <img
-                    className="w-28 h-28 object-cover rounded-full"
-                    src={studentInfo.url}
-                    alt=""
-                  />
+                  {studentInfo ? (
+                    <img
+                      className="w-28 h-28 object-cover rounded-full bg-zinc-400"
+                      src={studentInfo.url || people}
+                      alt=""
+                    />
+                  ) : (
+                    <img className="w-28 h-28 object-cover rounded-full" src={people} alt="" />
+                  )}
                 </div>
                 <div>
-                  <h2 className="text-4xl font-black w-96">
+                  <h2 className="text-4xl font-black w-60 h-5  mb-2  rounded-full ">
                     {studentInfo.nombres}
                   </h2>
-                  <h2 className="text-4xl font-black w-96">
-                    {studentInfo.apellido_p}
-                  </h2>
-                  <h2 className="text-4xl font-black w-96">
-                    {studentInfo.apellido_m}
-                  </h2>
-
-                  {/* Other user information */}
+                  <div className="flex flex-row gap-2">
+                    <h2 className="text-4xl  font-black w-auto h-5  mb-2 rounded-full">
+                      {studentInfo.apellido_p}
+                    </h2>
+                    <h2 className="text-4xl font-black w-52 h-5  mb-2 rounded-full">
+                      {studentInfo.apellido_m}
+                    </h2>
+                  </div>
                   <div className=" bg-blue-600 inline-block py-2 px-4 rounded-full mt-5">
                     <p className=" text-white flex gap-2 items-center justify-center ">
                       Registro Exitoso{" "}
@@ -126,11 +146,11 @@ export default function Inicio() {
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"
                         stroke="currentColor"
-                        class="w-6 h-6"
+                        className="w-6 h-6"
                       >
                         <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                           d="m4.5 12.75 6 6 9-13.5"
                         />
                       </svg>
@@ -170,6 +190,22 @@ export default function Inicio() {
               <div id="reader"></div>
             </div>
           </section>
+          <div>
+            <form onSubmit={handleManualAttendance}>
+              <div className="flex gap-2">
+                <input
+                  className="p-2 border border-zinc-800"
+                  placeholder="Ingrese DNI"
+                  type="text"
+                  value={dniInput}
+                  onChange={handleInputChange}
+                />
+                <button className="py-2 px-4 bg-black text-white rounded" type="submit">
+                  Enviar
+                </button>
+              </div>
+            </form>
+          </div>
 
         </div>
 
